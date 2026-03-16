@@ -46,17 +46,17 @@ function setSep(s) {
 }
 
 function generateRandom() {
-  const length    = parseInt(document.getElementById('lengthSlider').value);
-  const useUpper  = document.getElementById('toggleUpper').checked;
-  const useNums   = document.getElementById('toggleNumbers').checked;
-  const useSyms   = document.getElementById('toggleSymbols').checked;
-  const noAmbig   = document.getElementById('toggleAmbiguous').checked;
+  const length   = parseInt(document.getElementById('lengthSlider').value);
+  const useUpper = document.getElementById('toggleUpper').checked;
+  const useNums  = document.getElementById('toggleNumbers').checked;
+  const useSyms  = document.getElementById('toggleSymbols').checked;
+  const noAmbig  = document.getElementById('toggleAmbiguous').checked;
 
   let charset = LOWER;
-  if (useUpper)  charset += UPPER;
-  if (useNums)   charset += NUMBERS;
-  if (useSyms)   charset += SYMBOLS;
-  if (noAmbig)   charset = charset.replace(AMBIGUOUS, '');
+  if (useUpper) charset += UPPER;
+  if (useNums)  charset += NUMBERS;
+  if (useSyms)  charset += SYMBOLS;
+  if (noAmbig)  charset = charset.replace(AMBIGUOUS, '');
 
   if (!charset) return 'abcdefghijklmnop';
 
@@ -82,18 +82,23 @@ function generatePassphrase() {
 
 function calcStrength(pwd) {
   let score = 0;
+
   if (pwd.length >= 8)  score++;
   if (pwd.length >= 12) score++;
   if (pwd.length >= 16) score++;
+  if (pwd.length >= 20) score++;
   if (/[A-Z]/.test(pwd)) score++;
   if (/[0-9]/.test(pwd)) score++;
   if (/[^a-zA-Z0-9]/.test(pwd)) score++;
-  if (pwd.length >= 20) score++;
 
-  if (score <= 2) return { label: 'Weak',   color: 'bg-red-500',    pct: 20 };
-  if (score <= 3) return { label: 'Fair',   color: 'bg-orange-500', pct: 45 };
-  if (score <= 4) return { label: 'Good',   color: 'bg-yellow-500', pct: 65 };
-  if (score <= 5) return { label: 'Strong', color: 'bg-lime-500',   pct: 82 };
+  // Passphrase bonus — 3+ real word chunks separated by separator
+  const wordLike = pwd.split(/[-_ .!]/).filter(w => w.length >= 3);
+  if (wordLike.length >= 3) score += 2;
+
+  if (score <= 2) return { label: 'Weak',        color: 'bg-red-500',     pct: 20  };
+  if (score <= 3) return { label: 'Fair',        color: 'bg-orange-500',  pct: 40  };
+  if (score <= 4) return { label: 'Good',        color: 'bg-yellow-500',  pct: 60  };
+  if (score <= 5) return { label: 'Strong',      color: 'bg-lime-500',    pct: 80  };
   return                  { label: 'Very Strong', color: 'bg-emerald-500', pct: 100 };
 }
 
@@ -106,9 +111,8 @@ function generate() {
   document.getElementById('strengthBar').style.width = s.pct + '%';
   document.getElementById('strengthBar').className   = `h-full rounded-full transition-all duration-500 ${s.color}`;
   document.getElementById('strengthLabel').textContent = s.label;
-  document.getElementById('strengthLabel').className   = `font-semibold ${s.color.replace('bg-','text-')}`;
+  document.getElementById('strengthLabel').className   = `font-semibold ${s.color.replace('bg-', 'text-')}`;
 
-  // Add to history
   if (currentPassword && currentPassword !== '—') {
     history.unshift(currentPassword);
     if (history.length > 5) history.pop();
@@ -122,10 +126,10 @@ function renderHistory() {
     list.innerHTML = '<p class="text-slate-500 text-center">None yet</p>';
     return;
   }
-  list.innerHTML = history.map((p, i) => `
+  list.innerHTML = history.map(p => `
     <div class="flex items-center justify-between gap-2 p-2 bg-white/5 rounded-xl">
-      <span class="truncate flex-1">${p}</span>
-      <button onclick="copyText('${p.replace(/'/g,"\\'")}', this)" class="text-slate-500 hover:text-violet-400 transition-all px-2">📋</button>
+      <span class="truncate flex-1 font-mono text-xs">${p}</span>
+      <button onclick="copyText('${p.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}', this)" class="text-slate-500 hover:text-violet-400 transition-all px-2 shrink-0">📋</button>
     </div>
   `).join('');
 }
@@ -158,7 +162,7 @@ async function copyPassword() {
   }
 }
 
-// Slider live update
+// Slider live updates
 document.getElementById('lengthSlider').addEventListener('input', e => {
   document.getElementById('lengthVal').textContent = e.target.value;
   generate();
