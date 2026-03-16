@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PasswordGen Pro • Strong Password Generator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-violet-950 text-slate-200 font-sans">
+  <div class="max-w-md mx-auto px-4 py-10 space-y-6">
+
+    <!-- Header -->
+    <div class="text-center space-y-2">
+      <div class="w-16 h-16 mx-auto bg-gradient-to-r from-violet-500 to-purple-600 rounded-2xl shadow-2xl flex items-center justify-center text-3xl">🔐</div>
+      <h1 class="text-3xl font-bold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">PasswordGen Pro</h1>
+      <p class="text-slate-400 text-sm">Strong passwords. Generated locally. Never stored.</p>
+    </div>
+
+    <!-- Mode toggle -->
+    <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-2 flex gap-2 shadow-2xl">
+      <button id="btnRandom" onclick="setMode('random')" class="flex-1 py-3 rounded-2xl font-semibold text-sm transition-all bg-violet-600 text-white">🎲 Random</button>
+      <button id="btnPassphrase" onclick="setMode('passphrase')" class="flex-1 py-3 rounded-2xl font-semibold text-sm transition-all text-slate-400 hover:text-white">💬 Passphrase</button>
+    </div>
+
+    <!-- Random mode -->
+    <div id="randomPanel" class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl space-y-5">
+
+      <!-- Length slider -->
+      <div>
+        <div class="flex justify-between text-sm mb-2">
+          <span class="text-slate-400">Length</span>
+          <span id="lengthVal" class="font-bold text-violet-300">16</span>
+        </div>
+        <input id="lengthSlider" type="range" min="8" max="64" value="16"
+          class="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer accent-violet-500">
+      </div>
+
+      <!-- Toggles -->
+      <div class="space-y-3">
+        <label class="flex items-center justify-between cursor-pointer">
+          <span class="text-sm">Uppercase (A–Z)</span>
+          <input id="toggleUpper" type="checkbox" checked class="w-5 h-5 accent-violet-500 cursor-pointer">
+        </label>
+        <label class="flex items-center justify-between cursor-pointer">
+          <span class="text-sm">Numbers (0–9)</span>
+          <input id="toggleNumbers" type="checkbox" checked class="w-5 h-5 accent-violet-500 cursor-pointer">
+        </label>
+        <label class="flex items-center justify-between cursor-pointer">
+          <span class="text-sm">Symbols (!@#$...)</span>
+          <input id="toggleSymbols" type="checkbox" checked class="w-5 h-5 accent-violet-500 cursor-pointer">
+        </label>
+        <label class="flex items-center justify-between cursor-pointer">
+          <span class="text-sm">Exclude ambiguous (0,O,l,1)</span>
+          <input id="toggleAmbiguous" type="checkbox" class="w-5 h-5 accent-violet-500 cursor-pointer">
+        </label>
+      </div>
+    </div>
+
+    <!-- Passphrase mode -->
+    <div id="passphrasePanel" class="hidden bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl space-y-5">
+      <p class="text-slate-400 text-sm">3–5 random words joined by a separator. Easy to remember, hard to crack.</p>
+      <div>
+        <div class="flex justify-between text-sm mb-2">
+          <span class="text-slate-400">Words</span>
+          <span id="wordCountVal" class="font-bold text-violet-300">4</span>
+        </div>
+        <input id="wordCountSlider" type="range" min="3" max="6" value="4"
+          class="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer accent-violet-500">
+      </div>
+      <div>
+        <label class="block text-sm text-slate-400 mb-2">Separator</label>
+        <div class="flex gap-2">
+          <button onclick="setSep('-')"  id="sep-"  class="px-4 py-2 rounded-xl border border-violet-500 bg-violet-600/30 text-sm font-mono">-</button>
+          <button onclick="setSep('.')"  id="sep."  class="px-4 py-2 rounded-xl border border-white/20 bg-white/5 text-sm font-mono">.</button>
+          <button onclick="setSep('_')"  id="sep_"  class="px-4 py-2 rounded-xl border border-white/20 bg-white/5 text-sm font-mono">_</button>
+          <button onclick="setSep(' ')"  id="sep "  class="px-4 py-2 rounded-xl border border-white/20 bg-white/5 text-sm font-mono">space</button>
+          <button onclick="setSep('!')"  id="sep!"  class="px-4 py-2 rounded-xl border border-white/20 bg-white/5 text-sm font-mono">!</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Output -->
+    <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl space-y-4">
+
+      <!-- Password display -->
+      <div id="passwordDisplay"
+        class="w-full p-4 bg-black/30 border border-white/10 rounded-2xl font-mono text-lg break-all text-center text-white min-h-16 flex items-center justify-center leading-relaxed">
+        —
+      </div>
+
+      <!-- Strength meter -->
+      <div>
+        <div class="flex justify-between text-xs mb-1">
+          <span class="text-slate-400">Strength</span>
+          <span id="strengthLabel" class="font-semibold"></span>
+        </div>
+        <div class="h-2 bg-white/10 rounded-full overflow-hidden">
+          <div id="strengthBar" class="h-full rounded-full transition-all duration-500" style="width:0%"></div>
+        </div>
+      </div>
+
+      <!-- Buttons -->
+      <div class="flex gap-3">
+        <button onclick="generate()" class="flex-1 py-4 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 rounded-2xl font-bold shadow-2xl transition-all">
+          🔄 Generate
+        </button>
+        <button id="copyBtn" onclick="copyPassword()" class="py-4 px-6 bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl font-semibold transition-all">
+          📋 Copy
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-500 text-center">🔒 Generated in your browser. Never sent anywhere.</p>
+    </div>
+
+    <!-- History -->
+    <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="font-bold">Recent passwords</h2>
+        <button onclick="clearHistory()" class="text-xs text-slate-500 hover:text-red-400 transition-all">Clear</button>
+      </div>
+      <div id="historyList" class="space-y-2 text-xs font-mono text-slate-400">
+        <p class="text-slate-500 text-center">None yet</p>
+      </div>
+    </div>
+
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
